@@ -50,24 +50,27 @@ jobs:
 
       - name: Download and setup Gradle
         run: |
-          echo "Removing old gradlew if exists..."
           rm -f gradlew
           rm -rf gradle/wrapper
-          
-          echo "Downloading Gradle 8.5..."
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip -O gradle.zip
           unzip -q gradle.zip
           export PATH=$PWD/gradle-8.5/bin:$PATH
-          
-          echo "Generating gradle wrapper..."
           gradle wrapper --gradle-version 8.5
-          
-          echo "Cleaning up..."
           rm -rf gradle.zip gradle-8.5
           chmod +x gradlew
-          
-          echo "Gradle wrapper ready!"
-          ls -la gradlew
+
+      - name: Fix dependency versions in build.gradle.kts
+        run: |
+          echo "Fixing dependency versions..."
+          if [ -f app/build.gradle.kts ]; then
+            sed -i "s|converter-kotlinx-serialization:2.9.0|converter-kotlinx-serialization:2.11.0|g" app/build.gradle.kts
+            sed -i "s|tv-material:1.0.0-alpha11|tv-material:1.0.0-alpha10|g" app/build.gradle.kts
+            sed -i "s|tv-foundation:1.0.0-alpha11|tv-foundation:1.0.0-alpha10|g" app/build.gradle.kts
+            echo "✅ Fixed versions:"
+            grep -E "(converter-kotlinx-serialization|tv-material|tv-foundation)" app/build.gradle.kts || true
+          else
+            echo "⚠️ app/build.gradle.kts not found"
+          fi
 
       - name: Build Debug APK
         run: |
