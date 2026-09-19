@@ -30,12 +30,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Create local.properties
+      - name: Setup Android SDK manually
         run: |
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip
+          unzip -q cmdtools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+          rm cmdtools.zip
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+      - name: Create local.properties with tokens
+        run: |
           echo 'TMDB_BEARER_TOKEN=eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMzRjYTA1NDlmZTZjY2RmOTkyYWVkZGMyYmZiMzlmNiIsIm5iZiI6MTc3NzIyMTIwOC4wMjU5OTk4LCJzdWIiOiI2OWVlM2U1OGQzNThmMDhjNDUyOGRjZTAiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.CKXcYHhcQHKW3tIuDViHCQwAu6-hh--hoopAnDUeIUM' >> local.properties
           echo 'TMDB_API_KEY=134ca0549fe6ccdf992aeddc2bfb39f6' >> local.properties
 
